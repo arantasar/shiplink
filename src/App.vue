@@ -34,6 +34,13 @@
     </v-app-bar>
 
     <v-main>
+      <div class="d-flex justify-center">
+        <the-currency
+          v-for="currency in latestData"
+          :key="currency.code"
+          :currency="currency"
+        />
+      </div>
       <HelloWorld />
     </v-main>
   </v-app>
@@ -41,16 +48,25 @@
 
 <script>
 import HelloWorld from "./components/HelloWorld";
+import { getHeaderCurrencies } from "@/shared";
+import TheCurrency from "./components/TheCurrency.vue";
 
 export default {
   name: "App",
+  async created() {
+    const data = await getHeaderCurrencies();
+    this.latestData = data;
+  },
 
   components: {
     HelloWorld,
+    TheCurrency,
   },
 
-  data: () => ({
-    //
-  }),
+  data() {
+    return {
+      latestData: [],
+    };
+  },
 };
 </script>
