@@ -41,55 +41,84 @@
           :currency="currency"
         />
       </div>
-      <rate-chart v-if="chartData" :labels="labels" :datasets="chartData" />
+      <rate-chart
+        v-if="selectedCurrencies"
+        :labels="labels"
+        :datasets="selectedCurrencies"
+      />
     </v-main>
   </v-app>
 </template>
 
 <script>
-import { getHeaderCurrencies, fetchLatestData } from "@/shared";
+import {
+  CORE_CURRENCIES,
+  COLORS,
+  getHeaderCurrencies,
+  fetchLatestData,
+} from "@/shared";
 import TheCurrency from "./components/TheCurrency.vue";
 import RateChart from "./components/RateChart.vue";
 
 export default {
   name: "App",
+  computed: {
+    selectedCurrencies() {
+      return this.datasets.filter((item) =>
+        this.currencies.includes(item.label)
+      );
+    },
+  },
   async created() {
     const data = await getHeaderCurrencies();
-    const { data: chartData } = await fetchLatestData(30);
-    this.labels = chartData.map((day) => day.effectiveDate);
-    const dataSets = chartData
-      .map((day) => ({
-        rates: day.rates.map((rate) => ({ ...rate, label: day.effectiveDate })),
-      }))
-      .flatMap((day) => [...day.rates])
-      .filter((item) => item.code === "USD" || item.code === "EUR");
-    const res = [];
-    dataSets.forEach((item) => {
-      let candidate = res.find((i) => i.label === item.code);
-      if (candidate) {
-        candidate.data = [
-          ...candidate.data,
-          {
-            x: item.label,
-            y: item.mid,
-          },
-        ];
-      } else {
-        res.push({
-          label: item.code,
-          data: [
+    const { data: apiData } = await fetchLatestData(15);
+    const { labels, datasets } = this.parseChartData(apiData);
+    this.labels = labels;
+    this.datasets = datasets;
+    this.latestData = data;
+  },
+  methods: {
+    parseChartData(apiData) {
+      const labels = apiData.map((day) => day.effectiveDate);
+      const temp = apiData
+        .map((day) => ({
+          rates: day.rates.map((rate) => ({
+            ...rate,
+            label: day.effectiveDate,
+          })),
+        }))
+        .flatMap((day) => [...day.rates]);
+      const datasets = [];
+      temp.forEach((item) => {
+        let candidate = datasets.find((i) => i.label === item.code);
+        if (candidate) {
+          candidate.data = [
+            ...candidate.data,
             {
               x: item.label,
               y: item.mid,
             },
-          ],
-        });
-      }
-    });
-    this.chartData = res;
-    this.latestData = data;
+          ];
+        } else {
+          console.log(datasets.length);
+          datasets.push({
+            label: item.code,
+            borderColor: COLORS[datasets.length],
+            data: [
+              {
+                x: item.label,
+                y: item.mid,
+              },
+            ],
+          });
+        }
+      });
+      return {
+        labels,
+        datasets,
+      };
+    },
   },
-
   components: {
     TheCurrency,
     RateChart,
@@ -99,7 +128,8 @@ export default {
     return {
       latestData: [],
       labels: [],
-      chartData: [],
+      datasets: [],
+      currencies: CORE_CURRENCIES,
     };
   },
 };
