@@ -55,8 +55,8 @@
             </currency-select>
           </div>
           <h2 class="my-4">Select your dates</h2>
-          <div>From</div>
-          <div>To</div>
+          <date-selector v-model="from" label="From" />
+          <date-selector v-model="to" label="To" />
         </div>
         <rate-chart
           v-if="selectedCurrencies"
@@ -74,10 +74,12 @@ import {
   COLORS,
   getHeaderCurrencies,
   fetchLatestData,
+  fetchDataRange,
 } from "@/shared";
 import TheCurrency from "./components/TheCurrency.vue";
 import RateChart from "./components/RateChart.vue";
 import CurrencySelect from "./components/CurrencySelect.vue";
+import DateSelector from "./components/DateSelector.vue";
 
 export default {
   name: "App",
@@ -148,16 +150,38 @@ export default {
     TheCurrency,
     RateChart,
     CurrencySelect,
+    DateSelector,
   },
 
   data() {
     return {
+      from: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .substr(0, 10),
+      to: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .substr(0, 10),
+      toMenu: false,
       latestData: [],
       labels: [],
       datasets: [],
       currencies: CORE_CURRENCIES,
       availableCurrencies: CORE_CURRENCIES,
     };
+  },
+  watch: {
+    from: async function (value) {
+      const { data: apiData } = await fetchDataRange(value, this.to);
+      const { labels, datasets } = this.parseChartData(apiData);
+      this.labels = labels;
+      this.datasets = datasets;
+    },
+    to: async function (value) {
+      const { data: apiData } = await fetchDataRange(this.from, value);
+      const { labels, datasets } = this.parseChartData(apiData);
+      this.labels = labels;
+      this.datasets = datasets;
+    },
   },
 };
 </script>
