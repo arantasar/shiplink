@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h2>Rate chart</h2>
+  <div class="pa-5">
+    <h2>Average rate</h2>
     <canvas ref="chart"></canvas>
   </div>
 </template>

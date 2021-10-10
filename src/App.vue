@@ -34,7 +34,7 @@
     </v-app-bar>
 
     <v-main>
-      <div class="d-flex justify-center">
+      <div class="d-flex justify-center my-5">
         <the-currency
           v-for="currency in latestData"
           :key="currency.code"
@@ -42,7 +42,8 @@
         />
       </div>
       <div class="grid">
-        <div class="controls">
+        <div class="controls pa-5">
+          <h2 class="mb-4">Select your currencies</h2>
           <div class="currencies d-flex">
             <currency-select
               v-for="currency in latestData"
@@ -53,6 +54,7 @@
             >
             </currency-select>
           </div>
+          <h2 class="my-4">Select your dates</h2>
           <div>From</div>
           <div>To</div>
         </div>
