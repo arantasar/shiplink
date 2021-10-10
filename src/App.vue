@@ -34,14 +34,14 @@
     </v-app-bar>
 
     <v-main>
-      <div class="d-flex justify-center my-5">
+      <section class="d-flex justify-center my-5">
         <the-currency
           v-for="currency in latestData"
           :key="currency.code"
           :currency="currency"
         />
-      </div>
-      <div class="grid">
+      </section>
+      <section class="grid">
         <div class="controls pa-5">
           <h2 class="mb-4">Select your currencies</h2>
           <div class="currencies d-flex">
@@ -55,15 +55,18 @@
             </currency-select>
           </div>
           <h2 class="my-4">Select your dates</h2>
-          <date-selector v-model="from" label="From" />
-          <date-selector v-model="to" label="To" />
+          <div>
+            <date-selector v-model="from" label="From" />
+            <date-selector v-model="to" label="To" />
+          </div>
         </div>
         <rate-chart
           v-if="selectedCurrencies"
           :labels="labels"
           :datasets="selectedCurrencies"
         />
-      </div>
+      </section>
+      <error-modal v-model="dialog" />
     </v-main>
   </v-app>
 </template>
@@ -72,6 +75,7 @@
 import {
   CORE_CURRENCIES,
   COLORS,
+  DEFAULT_DATE,
   getHeaderCurrencies,
   fetchLatestData,
   fetchDataRange,
@@ -80,6 +84,7 @@ import TheCurrency from "./components/TheCurrency.vue";
 import RateChart from "./components/RateChart.vue";
 import CurrencySelect from "./components/CurrencySelect.vue";
 import DateSelector from "./components/DateSelector.vue";
+import ErrorModal from "./components/ErrorModal.vue";
 
 export default {
   name: "App",
@@ -91,14 +96,29 @@ export default {
     },
   },
   async created() {
-    const data = await getHeaderCurrencies();
-    const { data: apiData } = await fetchLatestData(30);
-    const { labels, datasets } = this.parseChartData(apiData);
-    this.labels = labels;
-    this.datasets = datasets;
-    this.latestData = data;
+    try {
+      const data = await getHeaderCurrencies();
+      const { data: apiData } = await fetchLatestData(30);
+      const { labels, datasets } = this.parseChartData(apiData);
+      this.labels = labels;
+      this.datasets = datasets;
+      this.latestData = data;
+    } catch (err) {
+      this.handleError(err);
+    }
   },
   methods: {
+    handleError(err) {
+      this.dialog = {
+        show: true,
+        message:
+          err.response.statusText ||
+          err.response.data ||
+          err.message ||
+          err.msg ||
+          err,
+      };
+    },
     handleToggleCurrency(currency) {
       if (this.currencies.includes(currency)) {
         this.currencies = this.currencies.filter((code) => code !== currency);
@@ -151,16 +171,17 @@ export default {
     RateChart,
     CurrencySelect,
     DateSelector,
+    ErrorModal,
   },
 
   data() {
     return {
-      from: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-        .toISOString()
-        .substr(0, 10),
-      to: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-        .toISOString()
-        .substr(0, 10),
+      dialog: {
+        show: false,
+        message: "",
+      },
+      from: DEFAULT_DATE,
+      to: DEFAULT_DATE,
       toMenu: false,
       latestData: [],
       labels: [],
@@ -171,16 +192,24 @@ export default {
   },
   watch: {
     from: async function (value) {
-      const { data: apiData } = await fetchDataRange(value, this.to);
-      const { labels, datasets } = this.parseChartData(apiData);
-      this.labels = labels;
-      this.datasets = datasets;
+      try {
+        const { data: apiData } = await fetchDataRange(value, this.to);
+        const { labels, datasets } = this.parseChartData(apiData);
+        this.labels = labels;
+        this.datasets = datasets;
+      } catch (err) {
+        this.handleError(err);
+      }
     },
     to: async function (value) {
-      const { data: apiData } = await fetchDataRange(this.from, value);
-      const { labels, datasets } = this.parseChartData(apiData);
-      this.labels = labels;
-      this.datasets = datasets;
+      try {
+        const { data: apiData } = await fetchDataRange(this.from, value);
+        const { labels, datasets } = this.parseChartData(apiData);
+        this.labels = labels;
+        this.datasets = datasets;
+      } catch (err) {
+        this.handleError(err);
+      }
     },
   },
 };

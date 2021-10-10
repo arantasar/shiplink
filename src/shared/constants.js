@@ -1,5 +1,10 @@
 export const BASE_URL = "http://api.nbp.pl/api/exchangerates";
 export const CORE_CURRENCIES = ["GBP", "EUR", "USD"];
+export const DEFAULT_DATE = new Date(
+  Date.now() - new Date().getTimezoneOffset() * 60000
+)
+  .toISOString()
+  .substr(0, 10);
 export const COLORS = [
   "#FF6633",
   "#FFB399",
