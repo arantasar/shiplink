@@ -192,8 +192,10 @@ export default {
 
 <style scoped lang="scss">
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  column-gap: 20px;
+  @media screen and (min-width: 960px) {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    column-gap: 20px;
+  }
 }
 </style>
