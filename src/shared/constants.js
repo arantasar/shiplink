@@ -57,7 +57,7 @@ export const DEFAULT_CHART = {
   options: {
     scales: {
       y: {
-        beginAtZero: true,
+        // beginAtZero: true,
       },
     },
   },

@@ -41,11 +41,27 @@
           :currency="currency"
         />
       </div>
-      <rate-chart
-        v-if="selectedCurrencies"
-        :labels="labels"
-        :datasets="selectedCurrencies"
-      />
+      <div class="grid">
+        <div class="controls">
+          <div class="currencies d-flex">
+            <currency-select
+              v-for="currency in latestData"
+              :key="currency.code"
+              :currency="currency"
+              :isSelected="currencies.includes(currency.code)"
+              @toggleCurrency="handleToggleCurrency"
+            >
+            </currency-select>
+          </div>
+          <div>From</div>
+          <div>To</div>
+        </div>
+        <rate-chart
+          v-if="selectedCurrencies"
+          :labels="labels"
+          :datasets="selectedCurrencies"
+        />
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -59,6 +75,7 @@ import {
 } from "@/shared";
 import TheCurrency from "./components/TheCurrency.vue";
 import RateChart from "./components/RateChart.vue";
+import CurrencySelect from "./components/CurrencySelect.vue";
 
 export default {
   name: "App",
@@ -71,13 +88,20 @@ export default {
   },
   async created() {
     const data = await getHeaderCurrencies();
-    const { data: apiData } = await fetchLatestData(15);
+    const { data: apiData } = await fetchLatestData(30);
     const { labels, datasets } = this.parseChartData(apiData);
     this.labels = labels;
     this.datasets = datasets;
     this.latestData = data;
   },
   methods: {
+    handleToggleCurrency(currency) {
+      if (this.currencies.includes(currency)) {
+        this.currencies = this.currencies.filter((code) => code !== currency);
+      } else {
+        this.currencies = [...this.currencies, currency];
+      }
+    },
     parseChartData(apiData) {
       const labels = apiData.map((day) => day.effectiveDate);
       const temp = apiData
@@ -100,7 +124,6 @@ export default {
             },
           ];
         } else {
-          console.log(datasets.length);
           datasets.push({
             label: item.code,
             borderColor: COLORS[datasets.length],
@@ -122,6 +145,7 @@ export default {
   components: {
     TheCurrency,
     RateChart,
+    CurrencySelect,
   },
 
   data() {
@@ -130,7 +154,16 @@ export default {
       labels: [],
       datasets: [],
       currencies: CORE_CURRENCIES,
+      availableCurrencies: CORE_CURRENCIES,
     };
   },
 };
 </script>
+
+<style scoped lang="scss">
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  column-gap: 20px;
+}
+</style>
