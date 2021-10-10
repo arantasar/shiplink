@@ -36,6 +36,7 @@
         />
       </section>
       <error-modal v-model="dialog" />
+      <welcome-screen v-model="welcome" />
     </v-main>
   </v-app>
 </template>
@@ -55,6 +56,7 @@ import CurrencySelect from "./components/CurrencySelect.vue";
 import DateSelector from "./components/DateSelector.vue";
 import ErrorModal from "./components/ErrorModal.vue";
 import AppBar from "./components/AppBar.vue";
+import WelcomeScreen from "./components/WelcomeScreen.vue";
 
 export default {
   name: "App",
@@ -143,10 +145,12 @@ export default {
     DateSelector,
     ErrorModal,
     AppBar,
+    WelcomeScreen,
   },
 
   data() {
     return {
+      welcome: true,
       dialog: {
         show: false,
         message: "",
