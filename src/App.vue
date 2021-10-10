@@ -41,31 +41,65 @@
           :currency="currency"
         />
       </div>
-      <HelloWorld />
+      <rate-chart v-if="chartData" :labels="labels" :datasets="chartData" />
     </v-main>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld";
-import { getHeaderCurrencies } from "@/shared";
+import { getHeaderCurrencies, fetchLatestData } from "@/shared";
 import TheCurrency from "./components/TheCurrency.vue";
+import RateChart from "./components/RateChart.vue";
 
 export default {
   name: "App",
   async created() {
     const data = await getHeaderCurrencies();
+    const { data: chartData } = await fetchLatestData(30);
+    this.labels = chartData.map((day) => day.effectiveDate);
+    const dataSets = chartData
+      .map((day) => ({
+        rates: day.rates.map((rate) => ({ ...rate, label: day.effectiveDate })),
+      }))
+      .flatMap((day) => [...day.rates])
+      .filter((item) => item.code === "USD" || item.code === "EUR");
+    const res = [];
+    dataSets.forEach((item) => {
+      let candidate = res.find((i) => i.label === item.code);
+      if (candidate) {
+        candidate.data = [
+          ...candidate.data,
+          {
+            x: item.label,
+            y: item.mid,
+          },
+        ];
+      } else {
+        res.push({
+          label: item.code,
+          data: [
+            {
+              x: item.label,
+              y: item.mid,
+            },
+          ],
+        });
+      }
+    });
+    this.chartData = res;
     this.latestData = data;
   },
 
   components: {
-    HelloWorld,
     TheCurrency,
+    RateChart,
   },
 
   data() {
     return {
       latestData: [],
+      labels: [],
+      chartData: [],
     };
   },
 };
