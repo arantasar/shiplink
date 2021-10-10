@@ -1,4 +1,4 @@
-export const BASE_URL = "http://api.nbp.pl/api/exchangerates";
+export const BASE_URL = "https://api.nbp.pl/api/exchangerates";
 export const CORE_CURRENCIES = ["GBP", "EUR", "USD"];
 export const DEFAULT_DATE = new Date(
   Date.now() - new Date().getTimezoneOffset() * 60000
